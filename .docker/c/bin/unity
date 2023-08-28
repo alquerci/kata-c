@@ -1,0 +1,83 @@
+#! /bin/sh -eu
+
+executeTestSuite ()
+{
+    test x"" != x"${TEST_DIRECTORIES}" || {
+        return
+    }
+    test x"" != x"${TEST_SUFFIXES}" || {
+        return
+    }
+
+    for a_testdir in ${TEST_DIRECTORIES};
+    do
+        for a_testsuffix in ${TEST_SUFFIXES};
+        do
+            for a_path in ${a_testdir}/*${a_testsuffix};
+            do
+                buildAndExecuteSourceTestFile "${a_path}"
+            done
+        done
+    done
+}
+
+renderResult ()
+{
+    ruby "${UNITY_ROOT}/auto/parse_output.rb" /dev/stdin
+}
+
+buildAndExecuteSourceTestFile ()
+{
+    b_path=$1
+
+    testPathToRunner "${b_path}"
+    ensureDirectoryExists "${c_runner}"
+
+    makeRunner "${b_path}" "${c_runner}"
+
+    buildAndExecuteTestWithRunner "${b_path}" "${c_runner}"
+}
+
+testPathToRunner ()
+{
+    c_path=$1
+
+    c_runner=`echo "${c_path}" | sed -E 's,(\.\w+)?$,Runner\1,'`
+    c_runner="./build/${c_runner}"
+}
+
+ensureDirectoryExists ()
+{
+    d_filePath=$1
+
+    mkdir -p `dirname "${d_filePath}"`
+}
+
+makeRunner ()
+{
+    e_sourceTest=$1
+    e_outputPath=$2
+
+    ruby "${UNITY_ROOT}/auto/generate_test_runner.rb" "${e_sourceTest}" "${e_outputPath}"
+}
+
+buildAndExecuteTestWithRunner ()
+{
+    f_sourceTest=$1
+    f_sourceRunner=$2
+    f_testProgram=`echo "${f_sourceRunner}" | sed -e 's,\.\w$,,'`
+
+    clang \
+        -I"${SOURCE_DIRECTORY}/" \
+        -I"${UNITY_ROOT}/src/" \
+        -I"${UNITY_ROOT}/extras/memory/src/" \
+        -o "${f_testProgram}" \
+        "${UNITY_ROOT}/src/unity.c" \
+        "${UNITY_ROOT}/extras/memory/src/unity_memory.c" \
+        "${f_sourceTest}" \
+        "${f_sourceRunner}"
+
+    "${f_testProgram}"
+}
+
+executeTestSuite 2>&1 | renderResult
