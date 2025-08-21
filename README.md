@@ -12,4 +12,14 @@ Tests
 bin/test
 ```
 
-Read the doc https://github.com/ThrowTheSwitch/Unity
+Resources
+---------
+
+### c language
+
+- https://en.cppreference.com/w/c/language.html
+- https://devdocs.io/c/
+
+### unity
+
+- https://github.com/ThrowTheSwitch/Unity

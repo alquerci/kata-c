@@ -1,7 +1,22 @@
 #! /bin/sh -eu
 
+main ()
+{
+    RESULT_DIR=`mktemp -d`
+
+    executeTestSuite || :
+
+    renderResultSummary "${RESULT_DIR}" || :
+
+    rm -r "${RESULT_DIR}"
+
+    return ${EXIT_CODE}
+}
+
 executeTestSuite ()
 {
+    EXIT_CODE=0
+
     test x"" != x"${TEST_DIRECTORIES}" || {
         return
     }
@@ -9,31 +24,56 @@ executeTestSuite ()
         return
     }
 
+    rm -rf "${BUILD_DIRECTORY}" &&
+    mkdir -p "${BUILD_DIRECTORY}" &&
+
+    cp -r "${SOURCE_DIRECTORY}" "${BUILD_DIRECTORY}" &&
+    find "${BUILD_DIRECTORY}" -type f ! -name '*.h' -delete &&
+
     for a_testdir in ${TEST_DIRECTORIES};
     do
         for a_testsuffix in ${TEST_SUFFIXES};
         do
             for a_path in ${a_testdir}/*${a_testsuffix};
             do
-                buildAndExecuteSourceTestFile "${a_path}"
+                progressAdvance &&
+
+                buildAndExecuteSourceTestFile "${a_path}" || EXIT_CODE=$?
             done
         done
     done
+
+    return ${EXIT_CODE}
 }
 
-renderResult ()
+progressAdvance ()
 {
-    ruby "${UNITY_ROOT}/auto/parse_output.rb" /dev/stdin
+    progressAdvance_total=${progressAdvance_total=0}
+
+    if test x"80" = x"${progressAdvance_total}"; then
+        progressAdvance_total=0
+
+        echo
+    else :; fi
+
+    /bin/echo -n .
+
+    progressAdvance_total=`expr 1 \+ "${progressAdvance_total}"`
+}
+
+renderResultSummary ()
+{
+    ruby "${UNITY_ROOT}/auto/unity_test_summary.rb" "$1"
 }
 
 buildAndExecuteSourceTestFile ()
 {
     b_path=$1
 
-    testPathToRunner "${b_path}"
-    ensureDirectoryExists "${c_runner}"
+    testPathToRunner "${b_path}" &&
+    ensureDirectoryExists "${c_runner}" &&
 
-    makeRunner "${b_path}" "${c_runner}"
+    makeRunner "${b_path}" "${c_runner}" &&
 
     buildAndExecuteTestWithRunner "${b_path}" "${c_runner}"
 }
@@ -42,8 +82,8 @@ testPathToRunner ()
 {
     c_path=$1
 
-    c_runner=`echo "${c_path}" | sed -E 's,(\.\w+)?$,Runner\1,'`
-    c_runner="./build/${c_runner}"
+    c_runner=`echo "${c_path}" | sed -E 's,(\.\w+)?$,Runner\1,'` &&
+    c_runner="${BUILD_DIRECTORY}/${c_runner}"
 }
 
 ensureDirectoryExists ()
@@ -65,19 +105,26 @@ buildAndExecuteTestWithRunner ()
 {
     f_sourceTest=$1
     f_sourceRunner=$2
-    f_testProgram=`echo "${f_sourceRunner}" | sed -e 's,\.\w$,,'`
+    f_testProgram=`echo "${f_sourceRunner}" | sed -e 's,\.\w$,,'` &&
 
     clang \
-        -I"${SOURCE_DIRECTORY}/" \
         -I"${UNITY_ROOT}/src/" \
         -I"${UNITY_ROOT}/extras/memory/src/" \
         -o "${f_testProgram}" \
         "${UNITY_ROOT}/src/unity.c" \
         "${UNITY_ROOT}/extras/memory/src/unity_memory.c" \
+        `findSourceFilesToCompile` \
         "${f_sourceTest}" \
-        "${f_sourceRunner}"
+        "${f_sourceRunner}" &&
 
-    "${f_testProgram}"
+    f_testresults=`mktemp -p"${RESULT_DIR}"`.testresults &&
+
+    "${f_testProgram}" 2>&1 > "${f_testresults}"
 }
 
-executeTestSuite 2>&1 | renderResult
+findSourceFilesToCompile ()
+{
+    find "${SOURCE_DIRECTORY}" -type f -name '*.c' ! -name "*${TEST_SUFFIXES}"
+}
+
+main ${1+"$@"}
