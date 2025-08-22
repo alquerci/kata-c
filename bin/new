@@ -19,10 +19,10 @@ ${1+:} false || {
 
 pkgdir=`realpath "${medir}/.."`
 srcdir="${pkgdir}/src"
-testsdir="${pkgdir}/src/Tests"
+testsdir="${pkgdir}/src/tests"
 
 defaultpkgname=acme
-defaultclassname=Acme
+defaultclassname=acme
 codefileext=c
 GIT=git
 SED=sed
@@ -40,7 +40,7 @@ main ()
     commit
 
     echo
-    echo "Open ${testsdir}/${classname}Test.${codefileext}"
+    echo "Open ${testsdir}/test_${classname}.${codefileext}"
     echo
     echo "And start coding"
     echo
@@ -63,10 +63,10 @@ createNewBranch ()
 configureClassName ()
 {
     sed -i "s/${defaultclassname}/${classname}/" \
-        "${testsdir}/${defaultclassname}Test.${codefileext}"
+        "${testsdir}/test_${defaultclassname}.${codefileext}"
 
-    mv "${testsdir}/${defaultclassname}Test.${codefileext}" \
-       "${testsdir}/${classname}Test.${codefileext}"
+    mv "${testsdir}/test_${defaultclassname}.${codefileext}" \
+       "${testsdir}/test_${classname}.${codefileext}"
 }
 
 removeSkeletonArtefact ()
@@ -77,9 +77,9 @@ removeSkeletonArtefact ()
 commit ()
 {
     git add \
-        "${testsdir}/${classname}Test.${codefileext}"
+        "${testsdir}/test_${classname}.${codefileext}"
 
-    git rm --cached "${testsdir}/${defaultclassname}Test.${codefileext}"
+    git rm --cached "${testsdir}/test_${defaultclassname}.${codefileext}"
 
     git commit -pm"Add ${pkgname}"
 }

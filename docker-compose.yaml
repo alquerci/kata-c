@@ -6,9 +6,4 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-    environment:
-      SOURCE_DIRECTORY: ./src
-      BUILD_DIRECTORY: ./build
-      TEST_DIRECTORIES: ./src/Tests
-      TEST_SUFFIXES: Test.c
     # entrypoint: 'tail -f /dev/null'

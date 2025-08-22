@@ -1,0 +1,38 @@
+# @see https://github.com/ThrowTheSwitch/Ceedling/blob/1.0.1/docs/CeedlingPacket.md#the-almighty-ceedling-project-configuration-file-in-glorious-yaml
+#
+:project:
+  :build_root: var/build
+  :release_build: true
+  :compile_threads: :auto
+  :test_threads: :auto
+  :test_file_prefix: test_
+  :use_mocks: false
+  :use_backtrace: :gdb
+
+:paths:
+  :test:
+    - 'src/**/tests'
+  :source: &paths_source
+    - '+:src/**'
+    - '-:src/**/tests'
+  :include: *paths_source
+
+:flags:
+  :release:
+    :compile:
+      - -std=c99
+      - -Wall -Wextra -Werror -Wfatal-errors
+      - -O2
+  :test:
+    :compile:
+      - -std=c99
+      - -Wall -Wextra -Werror -Wfatal-errors
+      - -ggdb
+
+:unity:
+  :use_param_tests: true
+
+:plugins:
+  :load_paths: []
+  :enabled:
+    - report_tests_pretty_stdout

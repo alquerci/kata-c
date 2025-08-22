@@ -2,4 +2,4 @@
 
 MEDIR=`dirname "$0"`
 
-"${MEDIR}/ceedling" -v1 test
+"${MEDIR}/ceedling" -v1 release

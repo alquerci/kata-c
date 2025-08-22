@@ -1,0 +1,10 @@
+#! /bin/sh -eu
+
+docker-compose build > /dev/null
+
+exitCode=0
+docker-compose run --rm -u `id -u`:`id -g` app ceedling "$@" || exitCode=$?
+
+docker-compose down
+
+exit ${exitCode}
