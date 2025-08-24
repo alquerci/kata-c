@@ -36,3 +36,17 @@
   :load_paths: []
   :enabled:
     - report_tests_pretty_stdout
+
+:tools:
+  :release_linker:
+    :executable: gcc
+    :name: default_release_linker
+    :optional: false
+    :stderr_redirect: :none
+    :arguments:
+      - '"${1}"'
+      - "${5}"
+      - -static
+      - -o "${2}"
+      - ''
+      - "${4}"
