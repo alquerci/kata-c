@@ -30,7 +30,7 @@ SED=sed
 main ()
 {
     pkgname=$1
-    classname=`formatToUpperCamelCase "${pkgname}"`
+    classname=`formatToLowerCamelCase "${pkgname}"`
 
     createNewBranch
 
@@ -46,9 +46,9 @@ main ()
     echo
 }
 
-formatToUpperCamelCase ()
+formatToLowerCamelCase ()
 {
-    echo "${1}" | tr '_' ' ' | sed -e 's,\b.,\U&,g' -e 's, ,,g'
+    echo "${1}" | sed -e 's,[[:upper:]][[:lower:]],_\0,g' -e 's,^_,,' -e 's,__,_,g' | tr '[:upper:]' '[:lower:]'
 }
 
 createNewBranch ()
